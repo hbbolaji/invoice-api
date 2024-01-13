@@ -1,5 +1,8 @@
 const express = require("express");
-const port = 4000;
+const dotenv = require("dotenv");
+dotenv.config({ path: ".env" });
+
+const port = process.env.PORT;
 const app = express();
 
 app.listen(port, () => {
