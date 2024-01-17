@@ -1,6 +1,6 @@
+const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModels");
-const { MongoError } = require("mongodb");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET, {
@@ -20,7 +20,7 @@ exports.signup = async (req, res, next) => {
     const token = signToken(newUser._id);
     res.status(201).json({
       status: "success",
-      token: `Bearer ${token}`,
+      token,
       data: newUser,
     });
   } catch (error) {
@@ -50,4 +50,38 @@ exports.login = async (req, res, next) => {
   } catch (error) {
     res.status(400).json({ error });
   }
+};
+
+exports.protect = async (req, res, next) => {
+  try {
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    // check if there is token
+    if (!token) {
+      next(new Error("No you are not logged in"));
+    }
+
+    // verify token
+    const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
+
+    // check if the user exist
+    const freshUser = await User.findById(decoded.id);
+    if (!freshUser) {
+      next(new Error("The user no longer exist"));
+    }
+
+    // check if password has changed
+    if (freshUser.changedPasswordAfter(decoded.iat)) {
+      next(new Error("User recently changed password, Please log in again"));
+    }
+
+    // grant access to protected route
+    req.user = freshUser;
+    next();
+  } catch (error) {}
 };
