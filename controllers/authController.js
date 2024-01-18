@@ -16,6 +16,7 @@ exports.signup = async (req, res, next) => {
       photo: req.body.photo,
       password: req.body.password,
       passwordConfirm: req.body.passwordConfirm,
+      role: req.body.role,
     });
     const token = signToken(newUser._id);
     res.status(201).json({
@@ -59,6 +60,7 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
+      console.log(req.headers.authorization);
       token = req.headers.authorization.split(" ")[1];
     }
     // check if there is token
@@ -83,5 +85,26 @@ exports.protect = async (req, res, next) => {
     // grant access to protected route
     req.user = freshUser;
     next();
+  } catch (error) {}
+};
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    try {
+      if (!roles.includes(req.user.role)) {
+        next(new Error("You are have permission to perform this action"));
+      }
+      next();
+    } catch (error) {}
+  };
+
+exports.forgetPassword = (req, res, next) => {
+  try {
+  } catch (error) {}
+};
+
+exports.resetPassword = (req, res, next) => {
+  try {
   } catch (error) {}
 };
