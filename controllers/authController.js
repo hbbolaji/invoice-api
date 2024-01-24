@@ -1,6 +1,7 @@
 const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModels");
+const sendEmail = require("./../utils/email");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET, {
@@ -22,7 +23,6 @@ exports.signup = async (req, res, next) => {
     res.status(201).json({
       status: "success",
       token,
-      data: newUser,
     });
   } catch (error) {
     res.status(400).json({ error });
@@ -60,7 +60,6 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
     ) {
-      console.log(req.headers.authorization);
       token = req.headers.authorization.split(" ")[1];
     }
     // check if there is token
@@ -81,7 +80,6 @@ exports.protect = async (req, res, next) => {
     if (freshUser.changedPasswordAfter(decoded.iat)) {
       next(new Error("User recently changed password, Please log in again"));
     }
-
     // grant access to protected route
     req.user = freshUser;
     next();
@@ -114,10 +112,40 @@ exports.forgetPassword = async (req, res, next) => {
     console.log(resetToken);
 
     // send token to the user's email
+    await sendEmail({
+      to: "",
+      subject: "",
+      message: "",
+    });
+    res.status(200).jsonn({
+      status: "success",
+      message: "token sent to mail",
+    });
   } catch (error) {}
 };
 
 exports.resetPassword = (req, res, next) => {
   try {
+  } catch (error) {}
+};
+
+exports.updatePassword = async (req, res, next) => {
+  try {
+    // check user
+    const user = await User.findById(req.user.id).select("+password");
+    // check passowrd
+    if (!(await user.correctPassword(req.body.password, user.password))) {
+      return next(new Error("Incorrect password"));
+    }
+    // update and save password
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
+
+    const token = signToken(user.id);
+    res.status(200).json({
+      status: "success",
+      token,
+    });
   } catch (error) {}
 };
