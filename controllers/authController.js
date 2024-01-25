@@ -9,6 +9,25 @@ const signToken = (id) => {
   });
 };
 
+const createSendToken = (user, res) => {
+  const token = signToken(user._id);
+  // res.cookie("jwt", token, {
+  //   expires: new Date(
+  //     Date.now + process.env.COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+  //   ),
+  //   secure: false,
+  //   httpOnly: true,
+  // });
+  user.password = undefined;
+  res.status(201).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
+};
+
 exports.signup = async (req, res, next) => {
   try {
     const newUser = await User.create({
@@ -19,11 +38,7 @@ exports.signup = async (req, res, next) => {
       passwordConfirm: req.body.passwordConfirm,
       role: req.body.role,
     });
-    const token = signToken(newUser._id);
-    res.status(201).json({
-      status: "success",
-      token,
-    });
+    createSendToken(newUser, res);
   } catch (error) {
     res.status(400).json({ error });
   }
@@ -42,12 +57,7 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password)))
       return next(new Error("Incorrect Email or Password"));
     // generate token
-    const token = signToken(user._id);
-    // send token
-    res.status(200).json({
-      message: "success",
-      token,
-    });
+    createSendToken(user, res);
   } catch (error) {
     res.status(400).json({ error });
   }
@@ -142,10 +152,6 @@ exports.updatePassword = async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     await user.save();
 
-    const token = signToken(user.id);
-    res.status(200).json({
-      status: "success",
-      token,
-    });
+    createSendToken(user, res);
   } catch (error) {}
 };
