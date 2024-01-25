@@ -7,11 +7,12 @@ const {
   updatePassword,
   protect,
 } = require("./../controllers/authController");
-const { updateMe } = require("./../controllers/userController");
+const { updateMe, deleteMe } = require("./../controllers/userController");
 
 const router = express.Router();
 
 router.route("/updateMe").patch(protect, updateMe);
+router.route("/deleteMe").delete(protect, deleteMe);
 
 router.post("/signup", signup);
 router.post("/login", login);
