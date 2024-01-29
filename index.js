@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const rateLimit = require("express-rate-limit");
 const connection = require("./connection.js");
 dotenv.config({ path: ".env" });
 const userRouter = require("./routes/userRoutes");
@@ -13,7 +14,14 @@ connection(uri);
 const app = express();
 app.use(express.json());
 
+const limiter = rateLimit({
+  limit: 100,
+  windowMs: 60 * 60 * 1000,
+  message: "Too many request from this IP, try again in one hour",
+});
+
 // routes
+app.use("/api", limiter);
 app.use("/api/v1/invoices", invoiceRouter);
 app.use("/api/v1/users", userRouter);
 
