@@ -1,6 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
 const dotenv = require("dotenv");
 const connection = require("./connection.js");
 dotenv.config({ path: ".env" });
@@ -29,6 +30,9 @@ app.use(helmet());
 
 // body parser
 app.use(express.json({ limit: "50kb" }));
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
 
 // routes
 app.use("/api/v1/invoices", invoiceRouter);
