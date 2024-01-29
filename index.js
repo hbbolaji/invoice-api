@@ -1,6 +1,7 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const dotenv = require("dotenv");
 const connection = require("./connection.js");
 dotenv.config({ path: ".env" });
 const userRouter = require("./routes/userRoutes");
@@ -12,7 +13,6 @@ const password = process.env.PASSWORD;
 const uri = db_uri.replace("<password>", password);
 connection(uri);
 const app = express();
-app.use(express.json());
 
 const limiter = rateLimit({
   limit: 100,
@@ -20,8 +20,17 @@ const limiter = rateLimit({
   message: "Too many request from this IP, try again in one hour",
 });
 
-// routes
+// Global middleware
+// rate-limiting
 app.use("/api", limiter);
+
+// http security
+app.use(helmet());
+
+// body parser
+app.use(express.json({ limit: "50kb" }));
+
+// routes
 app.use("/api/v1/invoices", invoiceRouter);
 app.use("/api/v1/users", userRouter);
 
