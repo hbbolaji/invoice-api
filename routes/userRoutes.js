@@ -7,9 +7,15 @@ const {
   updatePassword,
   protect,
 } = require("./../controllers/authController");
-const { updateMe, deleteMe } = require("./../controllers/userController");
+const {
+  updateMe,
+  deleteMe,
+  getUsers,
+} = require("./../controllers/userController");
 
 const router = express.Router();
+
+router.route("/").get(getUsers);
 
 router.route("/updateMe").patch(protect, updateMe);
 router.route("/deleteMe").delete(protect, deleteMe);

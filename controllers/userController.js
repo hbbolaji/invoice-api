@@ -8,6 +8,20 @@ const filterObject = (body, ...fields) => {
   return newObj;
 };
 
+exports.getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find();
+    const length = await User.countDocuments();
+    res.status(200).json({
+      message: "success",
+      length,
+      data: {
+        users,
+      },
+    });
+  } catch (error) {}
+};
+
 exports.updateMe = async (req, res, next) => {
   try {
     // return error if user tries to update password
