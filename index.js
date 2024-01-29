@@ -1,6 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
+const hpp = require("hpp");
 const mongoSanitize = require("express-mongo-sanitize");
 const dotenv = require("dotenv");
 const connection = require("./connection.js");
@@ -33,6 +34,9 @@ app.use(express.json({ limit: "50kb" }));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
+
+// parameter pollution
+app.use(hpp({ whitelist: [] }));
 
 // routes
 app.use("/api/v1/invoices", invoiceRouter);
