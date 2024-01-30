@@ -40,5 +40,20 @@ exports.getInvoice = async (req, res, next) => {
 
 exports.updateInvoice = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const invoice = await Invoice.findById(id);
+    // console.log(req.user._id);
+    // console.log(invoice.userId);
+    if (String(req.user.id) !== String(invoice.userId))
+      return next(new Error("You are not authorized to update this invoice"));
+
+    // const newInvoice = Invoice({ ...req.body, userId: req.user.id });
+    // await newInvoice.save();
+    res.status(200).json({
+      message: "success!",
+      data: {
+        // invoice: newInvoice,
+      },
+    });
   } catch (error) {}
 };
