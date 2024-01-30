@@ -28,6 +28,11 @@ const invoiceSchema = new mongoose.Schema({
     required: [true, "Payment Terms is required"],
   },
   projectDescription: String,
+  userId: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+    required: [true, "Log in to complete this operation"],
+  },
   itemList: [
     {
       itemName: {

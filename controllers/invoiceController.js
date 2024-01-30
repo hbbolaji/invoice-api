@@ -2,7 +2,7 @@ const Invoice = require("./../models/invoiceModels");
 
 exports.getInvoices = async (req, res, next) => {
   try {
-    const invoices = await Invoice.find();
+    const invoices = await Invoice.find().populate("userId");
     res.status(200).json({
       message: "success",
       data: {
@@ -14,7 +14,8 @@ exports.getInvoices = async (req, res, next) => {
 
 exports.createInvoice = async (req, res, next) => {
   try {
-    const invoice = await Invoice.create(req.body);
+    const invoice = Invoice({ ...req.body, userId: req.user.id });
+    await invoice.save();
     res.status(201).json({
       message: "success",
       data: {
@@ -34,5 +35,10 @@ exports.getInvoice = async (req, res, next) => {
         invoice,
       },
     });
+  } catch (error) {}
+};
+
+exports.updateInvoice = async (req, res, next) => {
+  try {
   } catch (error) {}
 };
