@@ -33,6 +33,11 @@ const invoiceSchema = new mongoose.Schema({
     ref: "User",
     required: [true, "Log in to complete this operation"],
   },
+  status: {
+    type: String,
+    enum: ["Paid", "Pending", "Draft"],
+    default: "Draft",
+  },
   itemList: [
     {
       itemName: {
@@ -52,4 +57,5 @@ const invoiceSchema = new mongoose.Schema({
 });
 
 const Invoice = mongoose.model("Invoice", invoiceSchema);
+
 module.exports = Invoice;

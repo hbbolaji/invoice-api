@@ -2,9 +2,30 @@ const Invoice = require("./../models/invoiceModels");
 
 exports.getInvoices = async (req, res, next) => {
   try {
-    const invoices = await Invoice.find().populate("userId");
+    console.log(req.query);
+
+    // query
+    let query = Invoice.find();
+
+    // sorting
+    if (req.query.sort) {
+      const sort = req.query.sort.replace(",", " ");
+      console.log(sort);
+      query = query.sort(sort);
+    } else {
+      query = query.sort("-invoiceDate");
+    }
+    // filtering fields
+    if (req.query.fields) {
+      const fields = req.query.fields.replace(",", " ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+    const invoices = await query.populate("userId");
     res.status(200).json({
       message: "success",
+      result: invoices.length,
       data: {
         invoices,
       },

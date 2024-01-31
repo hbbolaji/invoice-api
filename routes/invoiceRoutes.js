@@ -8,11 +8,9 @@ const {
 const { protect, restrictTo } = require("./../controllers/authController");
 
 const router = express.Router();
+// restrictTo("admin"),
 
-router
-  .route("/")
-  .get(protect, restrictTo("admin"), getInvoices)
-  .post(protect, createInvoice);
+router.route("/").get(protect, getInvoices).post(protect, createInvoice);
 router.route("/:id").get(protect, getInvoice).patch(protect, updateInvoice);
 
 module.exports = router;
