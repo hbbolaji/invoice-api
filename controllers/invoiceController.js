@@ -2,15 +2,12 @@ const Invoice = require("./../models/invoiceModels");
 
 exports.getInvoices = async (req, res, next) => {
   try {
-    console.log(req.query);
-
     // query
     let query = Invoice.find();
 
     // sorting
     if (req.query.sort) {
       const sort = req.query.sort.replace(",", " ");
-      console.log(sort);
       query = query.sort(sort);
     } else {
       query = query.sort("-invoiceDate");
