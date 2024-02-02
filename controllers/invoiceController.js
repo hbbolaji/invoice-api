@@ -3,8 +3,21 @@ const Invoice = require("./../models/invoiceModels");
 exports.getInvoices = async (req, res, next) => {
   try {
     // query
-    let query = Invoice.find();
-    const total = await Invoice.countDocuments();
+
+    // filtering
+    let queryObj = { ...req.query };
+    const excludedFields = ["sort", "page", "limit", "fields"];
+    excludedFields.forEach((el) => {
+      delete queryObj[el];
+    });
+
+    const queryStr = JSON.stringify(queryObj).replace(
+      /\b(gte|lte|gt|lt)\b/g,
+      (match) => `$${match}`
+    );
+    console.log(JSON.parse(queryStr));
+    let query = Invoice.find(JSON.parse(queryStr));
+
     // sorting
     if (req.query.sort) {
       const sort = req.query.sort.replace(",", " ");
@@ -22,13 +35,14 @@ exports.getInvoices = async (req, res, next) => {
     }
 
     // pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 10;
+    const skip = limit * (page - 1);
     if (req.query.page) {
-      const page = req.query.page * 1 || 1;
-      const limit = req.query.limit * 1 || 10;
-      const skip = limit * (page - 1);
+      const total = await Invoice.countDocuments();
       if (skip >= total) return next(new Error("No invoice on this page"));
-      query = query.skip(skip).limit(limit);
     }
+    query = query.skip(skip).limit(limit);
 
     const invoices = await query.populate("userId");
     res.status(200).json({
