@@ -4,7 +4,7 @@ exports.getInvoices = async (req, res, next) => {
   try {
     // query
     let query = Invoice.find();
-
+    const total = await Invoice.countDocuments();
     // sorting
     if (req.query.sort) {
       const sort = req.query.sort.replace(",", " ");
@@ -12,6 +12,7 @@ exports.getInvoices = async (req, res, next) => {
     } else {
       query = query.sort("-invoiceDate");
     }
+
     // filtering fields
     if (req.query.fields) {
       const fields = req.query.fields.replace(",", " ");
@@ -19,6 +20,16 @@ exports.getInvoices = async (req, res, next) => {
     } else {
       query = query.select("-__v");
     }
+
+    // pagination
+    if (req.query.page) {
+      const page = req.query.page * 1 || 1;
+      const limit = req.query.limit * 1 || 10;
+      const skip = limit * (page - 1);
+      if (skip >= total) return next(new Error("No invoice on this page"));
+      query = query.skip(skip).limit(limit);
+    }
+
     const invoices = await query.populate("userId");
     res.status(200).json({
       message: "success",
