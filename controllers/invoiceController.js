@@ -68,6 +68,18 @@ exports.createInvoice = async (req, res, next) => {
   } catch (error) {}
 };
 
+exports.getMyInvoices = async (req, res, next) => {
+  try {
+    const invoices = await Invoice.find({ userId: req.user.id });
+    res.status(200).json({
+      message: "success",
+      data: {
+        invoices,
+      },
+    });
+  } catch (error) {}
+};
+
 exports.getInvoice = async (req, res, next) => {
   try {
     const { id } = req.query;
