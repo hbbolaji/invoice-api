@@ -21,7 +21,7 @@ exports.getInvoices = async (req, res, next) => {
 
 exports.createInvoice = async (req, res, next) => {
   try {
-    const invoice = Invoice({ ...req.body, userId: req.user.id });
+    const invoice = Invoice({ ...req.body, merchant: req.user.id });
     await invoice.save();
     res.status(201).json({
       message: "success",
@@ -34,7 +34,7 @@ exports.createInvoice = async (req, res, next) => {
 
 exports.getMyInvoices = async (req, res, next) => {
   try {
-    const invoices = await Invoice.find({ userId: req.user.id });
+    const invoices = await Invoice.find({ merchant: req.user.id });
     res.status(200).json({
       message: "success",
       data: {
@@ -62,11 +62,10 @@ exports.updateInvoice = async (req, res, next) => {
     const { id } = req.params;
     const body = req.body;
 
-    body.itemList && delete body.itemList;
-    body.userId && delete body.userId;
+    body.merchant && delete body.merchant;
 
     const invoice = await Invoice.findById(id);
-    if (String(req.user.id) !== String(invoice.userId))
+    if (String(req.user.id) !== String(invoice.merchant || invoice.merchant.id))
       return next(new Error("You are not authorized to update this invoice"));
 
     Object.keys(body).forEach((key) => {

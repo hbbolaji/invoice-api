@@ -44,6 +44,22 @@ const userSchema = new mongoose.Schema({
       message: "Passwords are not the same",
     },
   },
+  address: {
+    type: {
+      streetAddress: {
+        type: String,
+        trim: true,
+        required: [true, "Street address is required"],
+      },
+      city: {
+        type: String,
+        trim: true,
+        required: [true, "city is required"],
+      },
+      postCode: String,
+      country: String,
+    },
+  },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
