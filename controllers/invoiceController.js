@@ -65,7 +65,7 @@ exports.updateInvoice = async (req, res, next) => {
     body.merchant && delete body.merchant;
 
     const invoice = await Invoice.findById(id);
-    if (String(req.user.id) !== String(invoice.merchant || invoice.merchant.id))
+    if (String(req.user.id) !== String(invoice.merchant))
       return next(new Error("You are not authorized to update this invoice"));
 
     Object.keys(body).forEach((key) => {
