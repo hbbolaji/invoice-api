@@ -8,6 +8,8 @@ const connection = require("./connection.js");
 dotenv.config({ path: ".env" });
 const userRouter = require("./routes/userRoutes");
 const invoiceRouter = require("./routes/invoiceRoutes");
+const globalErrorController = require("./controllers/errorController");
+const AppError = require("./utils/AppError");
 
 const port = process.env.PORT;
 const db_uri = process.env.DB_URI;
@@ -43,11 +45,10 @@ app.use("/api/v1/invoices", invoiceRouter);
 app.use("/api/v1/users", userRouter);
 
 app.all("*", (req, res, next) => {
-  res.status(400).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl}`,
-  });
+  next(new AppError(`Can't find ${req.originalUrl} on this server`, 404));
 });
+
+app.use(globalErrorController);
 
 app.listen(port, () => {
   console.log(`Server running on Port ${port}`);
