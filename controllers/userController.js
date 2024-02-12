@@ -29,7 +29,7 @@ exports.updateMe = async (req, res, next) => {
       return next(new Error("this route is not for password update"));
     }
 
-    const filteredBody = filterObject(req.body, "name", "email");
+    const filteredBody = filterObject(req.body, "name", "email", "address");
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
