@@ -1,6 +1,7 @@
 const Invoice = require("./../models/invoiceModels");
 const APIFeatures = require("./../utils/APIFeatures");
 const catchAsync = require("./../utils/CatchAsync");
+const AppError = require("./../utils/AppError");
 
 exports.getInvoices = catchAsync(async (req, res, next) => {
   let features = new APIFeatures(Invoice, req.query)
@@ -42,6 +43,8 @@ exports.getMyInvoices = catchAsync(async (req, res, next) => {
 exports.getInvoice = catchAsync(async (req, res, next) => {
   const { id } = req.query;
   const invoice = await Invoice.findById(id);
+  if (!invoice)
+    return next(new AppError("Invoice with this id does not exist", 404));
   res.status(200).json({
     message: "success",
     data: {
