@@ -21,7 +21,7 @@ class APIFeatures {
   // sorting
   sort() {
     if (this.queryStr.sort) {
-      const sortBy = this.queryStr.replace(",", " ");
+      const sortBy = this.queryStr.sort.replace(",", " ");
       this.query = this.query.sort(sortBy);
     } else {
       this.query = this.query.sort("-invoiceDate");

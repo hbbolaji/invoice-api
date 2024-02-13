@@ -1,13 +1,9 @@
 const mongoose = require("mongoose");
+const catchAsync = require("./utils/CatchAsync");
 
-const connection = async (uri) => {
-  try {
-    console.log("...");
-    await mongoose.connect(uri, {});
-    console.log("DB connected");
-  } catch (error) {
-    return error;
-  }
-};
+const connection = catchAsync(async (uri) => {
+  await mongoose.connect(uri, {});
+  console.log("DB connected");
+});
 
 module.exports = connection;

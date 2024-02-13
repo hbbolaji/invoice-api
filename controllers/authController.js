@@ -2,6 +2,7 @@ const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/userModels");
 const sendEmail = require("./../utils/email");
+const catchAsync = require("../utils/CatchAsync");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET, {
@@ -28,129 +29,110 @@ const createSendToken = (user, res) => {
   });
 };
 
-exports.signup = async (req, res, next) => {
-  try {
-    const newUser = await User.create({
-      name: req.body.name,
-      email: req.body.email,
-      photo: req.body.photo,
-      password: req.body.password,
-      passwordConfirm: req.body.passwordConfirm,
-      role: req.body.role,
-    });
-    createSendToken(newUser, res);
-  } catch (error) {
-    res.status(400).json({ error });
+exports.signup = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    name: req.body.name,
+    email: req.body.email,
+    photo: req.body.photo,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+    role: req.body.role,
+  });
+  createSendToken(newUser, res);
+});
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  // check if there is email and password
+  if (!email || !password) {
+    return next(new Error("please provide email and password"));
   }
-};
+  // check if user exist
+  const user = await User.findOne({ email }).select("+password");
 
-exports.login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    // check if there is email and password
-    if (!email || !password) {
-      return next(new Error("please provide email and password"));
-    }
-    // check if user exist
-    const user = await User.findOne({ email }).select("+password");
+  if (!user || !(await user.correctPassword(password, user.password)))
+    return next(new Error("Incorrect Email or Password"));
+  // generate token
+  createSendToken(user, res);
+});
 
-    if (!user || !(await user.correctPassword(password, user.password)))
-      return next(new Error("Incorrect Email or Password"));
-    // generate token
-    createSendToken(user, res);
-  } catch (error) {
-    res.status(400).json({ error });
+exports.protect = catchAsync(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
   }
-};
+  // check if there is token
+  if (!token) {
+    next(new Error("No you are not logged in"));
+  }
 
-exports.protect = async (req, res, next) => {
-  try {
-    let token;
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-    // check if there is token
-    if (!token) {
-      next(new Error("No you are not logged in"));
-    }
+  // verify token
+  const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
 
-    // verify token
-    const decoded = await promisify(jwt.verify)(token, process.env.SECRET);
+  // check if the user exist
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    next(new Error("The user no longer exist"));
+  }
 
-    // check if the user exist
-    const freshUser = await User.findById(decoded.id);
-    if (!freshUser) {
-      next(new Error("The user no longer exist"));
-    }
-
-    // check if password has changed
-    if (freshUser.changedPasswordAfter(decoded.iat)) {
-      next(new Error("User recently changed password, Please log in again"));
-    }
-    // grant access to protected route
-    req.user = freshUser;
-    next();
-  } catch (error) {}
-};
+  // check if password has changed
+  if (freshUser.changedPasswordAfter(decoded.iat)) {
+    next(new Error("User recently changed password, Please log in again"));
+  }
+  // grant access to protected route
+  req.user = freshUser;
+  next();
+});
 
 exports.restrictTo =
   (...roles) =>
   (req, res, next) => {
-    try {
-      if (!roles.includes(req.user.role)) {
-        next(new Error("You do not have permission to perform this action"));
-      }
-      next();
-    } catch (error) {}
+    if (!roles.includes(req.user.role)) {
+      next(new Error("You do not have permission to perform this action"));
+    }
+    next();
   };
 
-exports.forgetPassword = async (req, res, next) => {
-  try {
-    // find user
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      next(new Error("no user with this email address"));
-    }
+exports.forgetPassword = catchAsync(async (req, res, next) => {
+  // find user
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    next(new Error("no user with this email address"));
+  }
 
-    // generate reset token
-    const resetToken = user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
+  // generate reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
 
-    // send token to the user's email
-    await sendEmail({
-      to: "",
-      subject: "",
-      message: "",
-    });
-    res.status(200).jsonn({
-      status: "success",
-      message: "token sent to mail",
-    });
-  } catch (error) {}
-};
+  // send token to the user's email
+  await sendEmail({
+    to: "",
+    subject: "",
+    message: "",
+  });
+  res.status(200).jsonn({
+    status: "success",
+    message: "token sent to mail",
+  });
+});
 
-exports.resetPassword = (req, res, next) => {
-  try {
-  } catch (error) {}
-};
+exports.resetPassword = catchAsync(async (req, res, next) => {});
 
-exports.updatePassword = async (req, res, next) => {
-  try {
-    // check user
-    const user = await User.findById(req.user.id).select("+password");
-    // check passowrd
-    if (!(await user.correctPassword(req.body.password, user.password))) {
-      return next(new Error("Incorrect password"));
-    }
-    // update and save password
-    user.password = req.body.password;
-    user.passwordConfirm = req.body.passwordConfirm;
-    await user.save();
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // check user
+  const user = await User.findById(req.user.id).select("+password");
+  // check passowrd
+  if (!(await user.correctPassword(req.body.password, user.password))) {
+    return next(new Error("Incorrect password"));
+  }
+  // update and save password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
 
-    createSendToken(user, res);
-  } catch (error) {}
-};
+  createSendToken(user, res);
+});
