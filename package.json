@@ -6,7 +6,8 @@
   "author": "HASHIM BOLAJI BELLO <bolaji1050@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node --watch index.js"
+    "start:dev": "NODE_ENV=development node --watch index.js",
+    "start:prod": "NODE_ENV=production node --watch index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
