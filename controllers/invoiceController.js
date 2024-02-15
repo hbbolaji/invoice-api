@@ -34,6 +34,7 @@ exports.getMyInvoices = catchAsync(async (req, res, next) => {
   const invoices = await Invoice.find({ merchant: req.user.id });
   res.status(200).json({
     message: "success",
+    result: invoices.length,
     data: {
       invoices,
     },
