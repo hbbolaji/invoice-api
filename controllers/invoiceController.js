@@ -62,7 +62,9 @@ exports.updateInvoice = catchAsync(async (req, res, next) => {
 
   const invoice = await Invoice.findById(id);
   if (String(req.user.id) !== String(invoice.merchant))
-    return next(new Error("You are not authorized to update this invoice"));
+    return next(
+      new AppError("You are not authorized to update this invoice", 401)
+    );
 
   Object.keys(body).forEach((key) => {
     invoice[key] = body[key];
