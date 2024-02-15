@@ -11,7 +11,7 @@ const signToken = (id) => {
   });
 };
 
-const createSendToken = (user, res) => {
+const createSendToken = (user, res, status) => {
   const token = signToken(user._id);
   // res.cookie("jwt", token, {
   //   expires: new Date(
@@ -21,7 +21,7 @@ const createSendToken = (user, res) => {
   //   httpOnly: true,
   // });
   user.password = undefined;
-  res.status(201).json({
+  res.status(status).json({
     status: "success",
     token,
     data: {
@@ -39,7 +39,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     role: req.body.role,
   });
-  createSendToken(newUser, res);
+  createSendToken(newUser, res, 201);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -54,7 +54,7 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError("Incorrect Email or Password", 400));
   // generate token
-  createSendToken(user, res);
+  createSendToken(user, res, 200);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
